@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Área SGL (Padrão INCRA) - Artur Loiola</title>
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --success-color: #4CAF50;
+            --dark-color: #2c3e50;
+            --light-bg: #f8f9fa;
+            --border-color: #dcdde1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #eef2f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        header h1 {
+            color: var(--dark-color);
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: #7f8c8d;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 850px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--light-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--dark-color);
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group label {
+            width: 180px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-top: -8px;
+            margin-bottom: 15px;
+            margin-left: 180px;
+        }
+
+        .file-input-wrapper {
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .btn-file {
+            display: block;
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .btn-file:hover {
+            background: #1976D2;
+        }
+
+        /* Melhoria: Ocultar o input de forma mais robusta sem quebrar a acessibilidade */
+        #file-input {
+            opacity: 0;
+            position: absolute;
+            z-index: -1;
+        }
+
+        .textarea-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 220px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            resize: vertical;
+            background: #fff;
+        }
+
+        .btn-calc {
+            display: block;
+            width: 100%;
+            background: var(--success-color);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .btn-calc:hover {
+            background: #388E3C;
+        }
+
+        .results-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .results-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            border: 1px solid var(--border-color);
+            background: #fff;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-action:hover {
+            background: #e1e4e8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Calculadora de Área SGL (Padrão INCRA)</h1>
+        <p>Desenvolvido por Artur Loiola — Versão Web Online |Seja um contribuinte para novas ferramentas PIX: (81)994223458|</p>
+    </header>
+
+    <div class="main-layout">
+        <!-- PAINEL ESQUERDO: ENTRADA -->
+        <div class="panel">
+            <div class="panel-title">Entrada de Dados (UTM)</div>
+            
+            <div class="form-group">
+                <label for="utm-zona">Zona UTM:</label>
+                <input type="number" id="utm-zona" value="25" min="1" max="60">
+            </div>
+            
+            <div class="form-group">
+                <label for="utm-hemisferio">Hemisfério (N/S):</label>
+                <input type="text" id="utm-hemisferio" value="S" maxlength="1" style="text-transform: uppercase;">
+            </div>
+            
+            <div class="form-group">
+                <label for="ondulacao-n">Ondulação Geoidal (N):</label>
+                <input type="number" id="ondulacao-n" value="-5.0" step="0.01">
+            </div>
+            <div class="hint">* h (Geométrica) = H (Ortométrica) + N</div>
+
+            <div class="file-input-wrapper">
+                <label class="btn-file" for="file-input">
+                    Importar Ficheiro TXT/CSV (N, E, H)
+                </label>
+                <input type="file" id="file-input" accept=".txt,.csv">
+            </div>
+
+            <label class="textarea-label" for="coords-input">Ou digite/cole (Formato: N, E, H):</label>
+            <textarea id="coords-input">7500000.00, 150000.00, 100.5
+7500000.00, 150500.00, 102.0
+7500500.00, 150500.00, 105.3
+7500500.00, 150000.00, 99.8</textarea>
+
+            <button class="btn-calc" id="btn-processar">Calcular Área e Perímetro SGL</button>
+        </div>
+
+        <!-- PAINEL DIREITO: SAÍDA -->
+        <div class="panel results-panel">
+            <div class="panel-title">Resultados</div>
+            <textarea id="results-output" readonly placeholder="Os resultados formatados aparecerão aqui..."></textarea>
+            
+            <div class="results-actions">
+                <button class="btn-action" id="btn-copiar">Copiar Relatório</button>
+                <button class="btn-action" id="btn-baixar">Baixar (.txt)</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const a = 6378137.0;
+    const f = 1 / 298.257222101;
+    const e2 = 2 * f - f * f;
+
+    function utmParaGeodesica(easting, northing, zona, hemisferio) {
+        const k0 = 0.9996;
+        const b = a * (1 - f);
+        const ePrime2 = (a * a - b * b) / (b * b);
+        
+        const x = easting - 500000.0;
+        let y = northing;
+        const sul = hemisferio.toUpperCase() === 'S';
+        if (sul) y -= 10000000.0;
+        
+        const lon0 = ((zona - 1) * 6 - 180 + 3) * Math.PI / 180;
+        const M = y / k0;
+        const mu = M / (a * (1 - e2 / 4 - 3 * e2 * e2 / 64 - 5 * e2 * e2 * e2 / 256));
+        
+        const e1 = (1 - Math.sqrt(1 - e2)) / (1 + Math.sqrt(1 - e2));
+        const J1 = (3 * e1 / 2 - 27 * Math.pow(e1, 3) / 32);
+        const J2 = (21 * e1 * e1 / 16 - 55 * Math.pow(e1, 4) / 32);
+        const J3 = (151 * Math.pow(e1, 3) / 96);
+        const J4 = (1097 * Math.pow(e1, 4) / 512);
+        
+        const fp = mu + J1 * Math.sin(2 * mu) + J2 * Math.sin(4 * mu) + J3 * Math.sin(6 * mu) + J4 * Math.sin(8 * mu);
+        
+        const sinFp = Math.sin(fp);
+        const cosFp = Math.cos(fp);
+        const tanFp = Math.tan(fp);
+        
+        const C1 = ePrime2 * cosFp * cosFp;
+        const T1 = tanFp * tanFp;
+        const N1 = a / Math.sqrt(1 - e2 * sinFp * sinFp);
+        const R1 = a * (1 - e2) / Math.pow(1 - e2 * sinFp * sinFp, 1.5);
+        const D = x / (N1 * k0);
+        
+        let lat = fp - (N1 * tanFp / R1) * (D * D / 2 - (5 + 3 * T1 + 10 * C1 - 4 * C1 * C1 - 9 * ePrime2) * Math.pow(D, 4) / 24 + (61 + 90 * T1 + 298 * C1 + 45 * T1 * T1 - 252 * ePrime2 - 3 * C1 * C1) * Math.pow(D, 6) / 720);
+        let lon = lon0 + (D - (1 + 2 * T1 + C1) * Math.pow(D, 3) / 6 + (5 - 2 * C1 + 28 * T1 - 3 * C1 * C1 + 8 * ePrime2 + 24 * T1 * T1) * Math.pow(D, 5) / 120) / cosFp;
+        
+        return { lat: lat * 180 / Math.PI, lon: lon * 180 / Math.PI };
+    }
+
+    function geodesicaParaXyz(lat, lon, h) {
+        const lat_rad = lat * Math.PI / 180;
+        const lon_rad = lon * Math.PI / 180;
+
+        const sin_lat = Math.sin(lat_rad);
+        const cos_lat = Math.cos(lat_rad);
+        const sin_lon = Math.sin(lon_rad);
+        const cos_lon = Math.cos(lon_rad);
+
+        const N_curv = a / Math.sqrt(1 - e2 * sin_lat * sin_lat);
+
+        const X = (N_curv + h) * cos_lat * cos_lon;
+        const Y = (N_curv + h) * cos_lat * sin_lon;
+        const Z = (N_curv * (1 - e2) + h) * sin_lat;
+
+        return { X, Y, Z, lat_rad, lon_rad };
+    }
+
+    function xyzParaGeodesica(X, Y, Z) {
+        const b = a * (1 - f);
+        const ePrime2 = (a * a - b * b) / (b * b);
+        const p = Math.hypot(X, Y);
+        
+        if (p === 0) return { lat: Z > 0 ? 90 : -90, lon: 0, h: Math.abs(Z) - b };
+        
+        const theta = Math.atan2(Z * a, p * b);
+        const lat = Math.atan2(
+            Z + ePrime2 * b * Math.pow(Math.sin(theta), 3),
+            p - e2 * a * Math.pow(Math.cos(theta), 3)
+        );
+        const lon = Math.atan2(Y, X);
+        const sinLat = Math.sin(lat);
+        const N = a / Math.sqrt(1 - e2 * sinLat * sinLat);
+        const h = p / Math.cos(lat) - N;
+        
+        return { lat: lat * 180 / Math.PI, lon: lon * 180 / Math.PI, h: h };
+    }
+
+    function calcularAreaPerimetro(x_list, y_list) {
+        const n = x_list.length;
+        let area = 0.0;
+        let perimetro = 0.0;
+        
+        for (let i = 0; i < n; i++) {
+            let j = (i + 1) % n;
+            area += (x_list[i] * y_list[j]) - (y_list[i] * x_list[j]);
+            let dx = x_list[j] - x_list[i];
+            let dy = y_list[j] - y_list[i];
+            perimetro += Math.hypot(dx, dy);
+        }
+        
+        return { area_m2: Math.abs(area) / 2.0, area_ha: (Math.abs(area) / 2.0) / 10000.0, perimetro };
+    }
+
+    // ==========================================
+    // CÓDIGO CORRIGIDO: IMPORTAÇÃO DE FICHEIROS
+    // ==========================================
+    const fileInput = document.getElementById('file-input');
+    const coordsInput = document.getElementById('coords-input');
+    const btnProcessar = document.getElementById('btn-processar');
+    const resultsOutput = document.getElementById('results-output');
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        
+        reader.onload = function(evt) {
+            const conteudo = evt.target.result;
+            
+            if (conteudo && conteudo.trim() !== "") {
+                coordsInput.value = conteudo.trim();
+                
+                // Usamos um pequeno timeout para o navegador atualizar o texto antes do alerta aparecer
+                setTimeout(() => {
+                    alert("Ficheiro carregado com sucesso! Pode agora clicar em 'Calcular Área e Perímetro SGL'.");
+                }, 50);
+            } else {
+                alert("O ficheiro selecionado parece estar vazio ou não contém texto legível.");
+            }
+            
+            // IMPORTANTE: Limpar o valor do input permite carregar o mesmo ficheiro novamente se houver erro
+            fileInput.value = '';
+        };
+        
+        reader.onerror = function() {
+            alert("Erro ao tentar ler o ficheiro. Verifique se é um ficheiro .txt ou .csv válido.");
+            fileInput.value = ''; // Limpa em caso de erro
+        };
+        
+        // Ler como texto (padrão UTF-8)
+        reader.readAsText(file, 'UTF-8');
+    });
+
+    // Lógica de Processamento
+    btnProcessar.addEventListener('click', function() {
+        resultsOutput.value = "";
+        
+        try {
+            const zona = parseInt(document.getElementById('utm-zona').value);
+            const hemisferio = document.getElementById('utm-hemisferio').value.trim().toUpperCase();
+            const ondulacao_n = parseFloat(document.getElementById('ondulacao-n').value);
+            
+            if (isNaN(zona) || zona < 1 || zona > 60) throw new Error("Zona UTM deve ser um número entre 1 e 60.");
+            if (hemisferio !== 'N' && hemisferio !== 'S') throw new Error("Hemisfério deve ser 'N' ou 'S'.");
+            if (isNaN(ondulacao_n)) throw new Error("Ondulação Geoidal deve ser um valor numérico.");
+
+            const linhas = coordsInput.value.trim().split('\n');
+            if (linhas.length === 0 || (linhas.length === 1 && linhas[0] === '')) throw new Error("Nenhuma coordenada para processar.");
+
+            const X_list = [], Y_list = [], Z_list = [];
+            
+            for (let i = 0; i < linhas.length; i++) {
+                let linha = linhas[i].trim();
+                if (!linha) continue;
+
+                let partes = linha.replace(/;/g, ',').split(',');
+                if (partes.length >= 3) {
+                    let N = parseFloat(partes[0].trim());
+                    let E = parseFloat(partes[1].trim());
+                    let H = parseFloat(partes[2].trim());
+
+                    if (isNaN(N) || isNaN(E) || isNaN(H)) throw new Error(`Erro na linha ${i+1}: coordenadas devem ser numéricas.`);
+
+                    let h_geom = H + ondulacao_n;
+                    let geo = utmParaGeodesica(E, N, zona, hemisferio);
+                    let xyz = geodesicaParaXyz(geo.lat, geo.lon, h_geom);
+                    
+                    X_list.push(xyz.X); Y_list.push(xyz.Y); Z_list.push(xyz.Z);
+                }
+            }
+
+            if (X_list.length < 3) throw new Error("Um polígono válido precisa de pelo menos 3 vértices com N, E, H.");
+
+            let Xc = X_list.reduce((a, b) => a + b, 0) / X_list.length;
+            let Yc = Y_list.reduce((a, b) => a + b, 0) / Y_list.length;
+            let Zc = Z_list.reduce((a, b) => a + b, 0) / Z_list.length;
+
+            let centro = xyzParaGeodesica(Xc, Yc, Zc);
+
+            let lat0_rad = centro.lat * Math.PI / 180;
+            let lon0_rad = centro.lon * Math.PI / 180;
+            let sin_lat0 = Math.sin(lat0_rad), cos_lat0 = Math.cos(lat0_rad);
+            let sin_lon0 = Math.sin(lon0_rad), cos_lon0 = Math.cos(lon0_rad);
+
+            const x_sgl_lista = [], y_sgl_lista = [], z_sgl_lista = [];
+
+            for (let i = 0; i < X_list.length; i++) {
+                let dX = X_list[i] - Xc, dY = Y_list[i] - Yc, dZ = Z_list[i] - Zc;
+                x_sgl_lista.push(-sin_lon0 * dX + cos_lon0 * dY);
+                y_sgl_lista.push(-sin_lat0 * cos_lon0 * dX - sin_lat0 * sin_lon0 * dY + cos_lat0 * dZ);
+                z_sgl_lista.push(cos_lat0 * cos_lon0 * dX + cos_lat0 * sin_lon0 * dY + sin_lat0 * dZ);
+            }
+
+            let calc = calcularAreaPerimetro(x_sgl_lista, y_sgl_lista);
+
+            let resultado = "*********************************************\n" +
+                "* RELATÓRIO DE PROCESSAMENTO GEODÉSICO      *\n" +
+                "*********************************************\n\n" +
+                "ORIGEM DO SISTEMA LOCAL:\n" +
+                `Latitude:    ${centro.lat.toFixed(8)}°\n` +
+                `Longitude:   ${centro.lon.toFixed(8)}°\n` +
+                `Alt. Geom.:  ${centro.h.toFixed(3)} m\n` +
+                "---------------------------------------------\n\n" +
+                "=== RESULTADOS FINAIS ===\n" +
+                `Perímetro Calculado: ${calc.perimetro.toFixed(2)} metros\n` +
+                `Área Calculada:      ${calc.area_m2.toFixed(2)} m²\n` +
+                `Área em Hectares:    ${calc.area_ha.toFixed(4)} ha\n\n` +
+                "---------------------------------------------\n" +
+                "Coordenadas ENU (East, North, Up):\n";
+
+            for (let i = 0; i < x_sgl_lista.length; i++) {
+                let idx = (i + 1) < 10 ? "0" + (i + 1) : (i + 1);
+                resultado += `V 0${idx}: E = ${x_sgl_lista[i].toFixed(3)} | N = ${y_sgl_lista[i].toFixed(3)} | U = ${z_sgl_lista[i].toFixed(3)}\n`;
+            }
+
+            resultsOutput.value = resultado;
+
+        } catch (err) {
+            resultsOutput.value = `Erro: ${err.message}`;
+        }
+    });
+
+    document.getElementById('btn-copiar').addEventListener('click', function() {
+        if (!resultsOutput.value) return;
+        resultsOutput.select();
+        document.execCommand('copy');
+        alert('Relatório copiado com sucesso!');
+    });
+
+    document.getElementById('btn-baixar').addEventListener('click', function() {
+        if (!resultsOutput.value) return;
+        const blob = new Blob([resultsOutput.value], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'relatorio_geodesico.txt';
+        link.click();
+        URL.revokeObjectURL(url);
+    });
+</script>
+
+</body>
+</html>
